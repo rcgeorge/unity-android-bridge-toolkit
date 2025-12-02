@@ -35,13 +35,7 @@ namespace Instemic.AndroidBridge
         [MenuItem("Tools/Android Bridge Toolkit/3. Build AAR", priority = 102)]
         public static void ShowAARBuilder()
         {
-            Debug.Log("AAR Builder - Coming in v1.1!");
-            EditorUtility.DisplayDialog(
-                "Coming Soon",
-                "AAR Builder is coming in v1.1!\n\n" +
-                "For now, use Gradle manually to build AARs from your Java code.",
-                "OK"
-            );
+            AARBuilderWindow.Init();
         }
         
         [MenuItem("Tools/Android Bridge Toolkit/Settings", priority = 200)]
