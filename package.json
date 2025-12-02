@@ -1,0 +1,40 @@
+{
+  "name": "com.instemic.android-bridge-toolkit",
+  "version": "1.0.0",
+  "displayName": "Android Bridge Toolkit",
+  "description": "Complete toolkit for Unity Android development. Decompile APKs, build AARs, and generate C# bridges automatically. No Android Studio required!",
+  "unity": "2021.3",
+  "keywords": [
+    "android",
+    "bridge",
+    "aar",
+    "apk",
+    "decompiler",
+    "java",
+    "plugin",
+    "code-generation"
+  ],
+  "author": {
+    "name": "Instemic",
+    "email": "rcgeorge@users.noreply.github.com",
+    "url": "https://github.com/rcgeorge"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rcgeorge/unity-android-bridge-toolkit.git"
+  },
+  "dependencies": {},
+  "samples": [
+    {
+      "displayName": "Viture XR Example",
+      "description": "Complete example showing Viture XR integration",
+      "path": "Samples~/VitureXR"
+    },
+    {
+      "displayName": "Simple Bridge Example",
+      "description": "Basic bridge example",
+      "path": "Samples~/SimpleBridge"
+    }
+  ]
+}
