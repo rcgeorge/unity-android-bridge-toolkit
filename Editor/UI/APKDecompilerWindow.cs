@@ -67,4 +67,156 @@ namespace Instemic.AndroidBridge
             
             apkPath = EditorGUILayout.TextField("APK Path:", apkPath);
             
-            if (GUILayout.Button("Browse", GUILayout.Width(80)))\n            {\n                string path = EditorUtility.OpenFilePanel("Select APK File", "", "apk");\n                if (!string.IsNullOrEmpty(path))\n                {\n                    apkPath = path;\n                }\n            }\n            \n            EditorGUILayout.EndHorizontal();\n            \n            // Extract Button\n            EditorGUILayout.Space();\n            GUILayout.Label("2. Extract Classes", EditorStyles.boldLabel);\n            \n            EditorGUI.BeginDisabledGroup(isExtracting || string.IsNullOrEmpty(apkPath));\n            \n            if (GUILayout.Button("🚀 Extract Class Metadata", GUILayout.Height(50)))\n            {\n                StartExtraction();\n            }\n            \n            EditorGUI.EndDisabledGroup();\n            \n            // Progress\n            if (isExtracting)\n            {\n                EditorGUILayout.Space();\n                EditorGUILayout.LabelField("Progress:", progressMessage);\n                EditorGUI.ProgressBar(GUILayoutUtility.GetRect(18, 18), progress, $"{(int)(progress * 100)}%");\n            }\n            \n            // Browse Results\n            if (extractedClasses != null && extractedClasses.Count > 0)\n            {\n                EditorGUILayout.Space();\n                GUILayout.Label("✅ Extraction Complete!", EditorStyles.boldLabel);\n                \n                EditorGUILayout.HelpBox(\n                    $"Found {extractedClasses.Count} classes!\\n\\n" +\n                    "Click 'Browse Classes' to explore and generate bridges.\",\n                    MessageType.Info\n                );\n                \n                if (GUILayout.Button("📂 Browse Extracted Classes", GUILayout.Height(50)))\n                {\n                    DecompiledFileBrowser.Init(extractedClasses);\n                }\n            }\n            \n            // Info Section\n            EditorGUILayout.Space(20);\n            DrawInfoSection();\n        }\n        \n        void DrawInfoSection()\n        {\n            GUILayout.Label("ℹ️ How It Works\", EditorStyles.boldLabel);\n            \n            EditorGUILayout.BeginVertical(EditorStyles.helpBox);\n            \n            EditorGUILayout.LabelField(\"What this extracts:\", EditorStyles.boldLabel);\n            EditorGUILayout.LabelField(\"• Class names and packages\");\n            EditorGUILayout.LabelField(\"• Public method signatures\");\n            EditorGUILayout.LabelField(\"• Return types and parameters\");\n            EditorGUILayout.LabelField(\"• Static/instance method flags\");\n            \n            EditorGUILayout.Space();\n            \n            EditorGUILayout.LabelField(\"Perfect for:\", EditorStyles.boldLabel);\n            EditorGUILayout.LabelField(\"• Generating C# bridges automatically\");\n            EditorGUILayout.LabelField(\"• Understanding APK structure\");\n            EditorGUILayout.LabelField(\"• Quick class discovery\");\n            \n            EditorGUILayout.Space();\n            \n            EditorGUILayout.HelpBox(\n                \"💡 This tool parses DEX bytecode natively - no JADX or external tools needed!\\n\" +\n                \"It's fast, self-contained, and gives you exactly what you need for bridge generation.\",\n                MessageType.Info\n            );\n            \n            EditorGUILayout.EndVertical();\n        }\n        \n        void StartExtraction()\n        {\n            if (!File.Exists(apkPath))\n            {\n                EditorUtility.DisplayDialog(\"Error\", $\"APK file not found:\\n{apkPath}\", \"OK\");\n                return;\n            }\n            \n            isExtracting = true;\n            progress = 0f;\n            progressMessage = \"Starting extraction...\";\n            extractedClasses = null;\n            \n            try\n            {\n                extractedClasses = APKExtractor.ExtractClasses(apkPath, OnProgress);\n                OnComplete();\n            }\n            catch (Exception ex)\n            {\n                OnError(ex.Message);\n            }\n        }\n        \n        void OnProgress(float p, string message)\n        {\n            progress = p;\n            progressMessage = message;\n            Repaint();\n        }\n        \n        void OnComplete()\n        {\n            isExtracting = false;\n            progress = 1f;\n            progressMessage = \"Complete!\";\n            \n            Debug.Log($\"APK extraction complete: Found {extractedClasses.Count} classes\");\n            \n            EditorUtility.DisplayDialog(\n                \"Extraction Complete\",\n                $\"Successfully extracted {extractedClasses.Count} classes!\\n\\n\" +\n                \"Click 'Browse Extracted Classes' to explore and generate bridges.\",\n                \"OK\"\n            );\n            \n            Repaint();\n        }\n        \n        void OnError(string error)\n        {\n            isExtracting = false;\n            progress = 0f;\n            progressMessage = \"\";\n            extractedClasses = null;\n            \n            Debug.LogError($\"APK extraction failed: {error}\");\n            \n            EditorUtility.DisplayDialog(\n                \"Extraction Failed\",\n                $\"Error:\\n{error}\\n\\nMake sure the file is a valid APK.\",\n                \"OK\"\n            );\n            \n            Repaint();\n        }\n    }\n}\n"
+            if (GUILayout.Button("Browse", GUILayout.Width(80)))
+            {
+                string path = EditorUtility.OpenFilePanel("Select APK File", "", "apk");
+                if (!string.IsNullOrEmpty(path))
+                {
+                    apkPath = path;
+                }
+            }
+            
+            EditorGUILayout.EndHorizontal();
+            
+            // Extract Button
+            EditorGUILayout.Space();
+            GUILayout.Label("2. Extract Classes", EditorStyles.boldLabel);
+            
+            EditorGUI.BeginDisabledGroup(isExtracting || string.IsNullOrEmpty(apkPath));
+            
+            if (GUILayout.Button("🚀 Extract Class Metadata", GUILayout.Height(50)))
+            {
+                StartExtraction();
+            }
+            
+            EditorGUI.EndDisabledGroup();
+            
+            // Progress
+            if (isExtracting)
+            {
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("Progress:", progressMessage);
+                EditorGUI.ProgressBar(GUILayoutUtility.GetRect(18, 18), progress, $"{(int)(progress * 100)}%");
+            }
+            
+            // Browse Results
+            if (extractedClasses != null && extractedClasses.Count > 0)
+            {
+                EditorGUILayout.Space();
+                GUILayout.Label("✅ Extraction Complete!", EditorStyles.boldLabel);
+                
+                EditorGUILayout.HelpBox(
+                    $"Found {extractedClasses.Count} classes!\\n\\n" +
+                    "Click 'Browse Classes' to explore and generate bridges.",
+                    MessageType.Info
+                );
+                
+                if (GUILayout.Button("📂 Browse Extracted Classes", GUILayout.Height(50)))
+                {
+                    DecompiledFileBrowser.Init(extractedClasses);
+                }
+            }
+            
+            // Info Section
+            EditorGUILayout.Space(20);
+            DrawInfoSection();
+        }
+        
+        void DrawInfoSection()
+        {
+            GUILayout.Label("ℹ️ How It Works", EditorStyles.boldLabel);
+            
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            
+            EditorGUILayout.LabelField("What this extracts:", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("• Class names and packages");
+            EditorGUILayout.LabelField("• Public method signatures");
+            EditorGUILayout.LabelField("• Return types and parameters");
+            EditorGUILayout.LabelField("• Static/instance method flags");
+            
+            EditorGUILayout.Space();
+            
+            EditorGUILayout.LabelField("Perfect for:", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("• Generating C# bridges automatically");
+            EditorGUILayout.LabelField("• Understanding APK structure");
+            EditorGUILayout.LabelField("• Quick class discovery");
+            
+            EditorGUILayout.Space();
+            
+            EditorGUILayout.HelpBox(
+                "💡 This tool parses DEX bytecode natively - no JADX or external tools needed!\\n" +
+                "It's fast, self-contained, and gives you exactly what you need for bridge generation.",
+                MessageType.Info
+            );
+            
+            EditorGUILayout.EndVertical();
+        }
+        
+        void StartExtraction()
+        {
+            if (!File.Exists(apkPath))
+            {
+                EditorUtility.DisplayDialog("Error", $"APK file not found:\\n{apkPath}", "OK");
+                return;
+            }
+            
+            isExtracting = true;
+            progress = 0f;
+            progressMessage = "Starting extraction...";
+            extractedClasses = null;
+            
+            try
+            {
+                extractedClasses = APKExtractor.ExtractClasses(apkPath, OnProgress);
+                OnComplete();
+            }
+            catch (Exception ex)
+            {
+                OnError(ex.Message);
+            }
+        }
+        
+        void OnProgress(float p, string message)
+        {
+            progress = p;
+            progressMessage = message;
+            Repaint();
+        }
+        
+        void OnComplete()
+        {
+            isExtracting = false;
+            progress = 1f;
+            progressMessage = "Complete!";
+            
+            Debug.Log($"APK extraction complete: Found {extractedClasses.Count} classes");
+            
+            EditorUtility.DisplayDialog(
+                "Extraction Complete",
+                $"Successfully extracted {extractedClasses.Count} classes!\\n\\n" +
+                "Click 'Browse Extracted Classes' to explore and generate bridges.",
+                "OK"
+            );
+            
+            Repaint();
+        }
+        
+        void OnError(string error)
+        {
+            isExtracting = false;
+            progress = 0f;
+            progressMessage = "";
+            extractedClasses = null;
+            
+            Debug.LogError($"APK extraction failed: {error}");
+            
+            EditorUtility.DisplayDialog(
+                "Extraction Failed",
+                $"Error:\\n{error}\\n\\nMake sure the file is a valid APK.",
+                "OK"
+            );
+            
+            Repaint();
+        }
+    }
+}
