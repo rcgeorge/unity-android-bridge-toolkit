@@ -49,7 +49,7 @@ namespace Instemic.AndroidBridge
             GUILayout.Label("📦 APK Class Extractor", EditorStyles.largeLabel);
             
             EditorGUILayout.HelpBox(
-                "✅ Self-Contained - No external tools required!\\n\\n" +
+                "✅ Self-Contained - No external tools required!\n\n" +
                 "Extract class metadata from APK files natively. This tool parses DEX files " +
                 "to extract class names, methods, and signatures - perfect for generating C# bridges!",
                 MessageType.Info
@@ -106,7 +106,7 @@ namespace Instemic.AndroidBridge
                 GUILayout.Label("✅ Extraction Complete!", EditorStyles.boldLabel);
                 
                 EditorGUILayout.HelpBox(
-                    $"Found {extractedClasses.Count} classes!\\n\\n" +
+                    $"Found {extractedClasses.Count} classes!\n\n" +
                     "Click 'Browse Classes' to explore and generate bridges.",
                     MessageType.Info
                 );
@@ -144,7 +144,7 @@ namespace Instemic.AndroidBridge
             EditorGUILayout.Space();
             
             EditorGUILayout.HelpBox(
-                "💡 This tool parses DEX bytecode natively - no JADX or external tools needed!\\n" +
+                "💡 This tool parses DEX bytecode natively - no JADX or external tools needed!\n" +
                 "It's fast, self-contained, and gives you exactly what you need for bridge generation.",
                 MessageType.Info
             );
@@ -156,7 +156,7 @@ namespace Instemic.AndroidBridge
         {
             if (!File.Exists(apkPath))
             {
-                EditorUtility.DisplayDialog("Error", $"APK file not found:\\n{apkPath}", "OK");
+                EditorUtility.DisplayDialog("Error", "APK file not found: " + apkPath, "OK");
                 return;
             }
             
@@ -193,8 +193,7 @@ namespace Instemic.AndroidBridge
             
             EditorUtility.DisplayDialog(
                 "Extraction Complete",
-                $"Successfully extracted {extractedClasses.Count} classes!\\n\\n" +
-                "Click 'Browse Extracted Classes' to explore and generate bridges.",
+                "Successfully extracted " + extractedClasses.Count + " classes!\n\nClick 'Browse Extracted Classes' to explore and generate bridges.",
                 "OK"
             );
             
@@ -212,7 +211,7 @@ namespace Instemic.AndroidBridge
             
             EditorUtility.DisplayDialog(
                 "Extraction Failed",
-                $"Error:\\n{error}\\n\\nMake sure the file is a valid APK.",
+                "Error: " + error + "\n\nMake sure the file is a valid APK.",
                 "OK"
             );
             
