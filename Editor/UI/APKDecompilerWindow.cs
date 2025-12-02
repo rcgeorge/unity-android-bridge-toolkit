@@ -13,7 +13,7 @@ using Instemic.AndroidBridge.Core;
 namespace Instemic.AndroidBridge
 {
     /// <summary>
-    /// Window for extracting class metadata from APK files (no external tools required!)
+    /// Window for extracting class metadata and native libraries from APK files
     /// </summary>
     public class APKDecompilerWindow : EditorWindow
     {
@@ -22,13 +22,15 @@ namespace Instemic.AndroidBridge
         private float progress = 0f;
         private string progressMessage = "";
         private List<DexClass> extractedClasses;
+        private List<string> nativeLibraries;
+        private bool copyApkToProject = true;
         
         private Vector2 scrollPos;
         
         public static void Init()
         {
             APKDecompilerWindow window = GetWindow<APKDecompilerWindow>("APK Extractor");
-            window.minSize = new Vector2(600, 400);
+            window.minSize = new Vector2(650, 500);
             window.Show();
         }
         
@@ -46,12 +48,15 @@ namespace Instemic.AndroidBridge
         
         void DrawHeader()
         {
-            GUILayout.Label("📦 APK Class Extractor", EditorStyles.largeLabel);
+            GUILayout.Label("📦 APK Extractor - Complete Setup", EditorStyles.largeLabel);
             
             EditorGUILayout.HelpBox(
-                "✅ Self-Contained - No external tools required!\n\n" +
-                "Extract class metadata from APK files natively. This tool parses DEX files " +
-                "to extract class names, methods, and signatures - perfect for generating C# bridges!",
+                "✅ Complete APK Integration Toolkit\n\n" +
+                "Extract everything you need from APK files:\n" +
+                "• Class metadata (for C# bridges)\n" +
+                "• Native libraries (.so files)\n" +
+                "• Copy APK to your Unity project\n\n" +
+                "All self-contained - no external tools required!",
                 MessageType.Info
             );
         }
@@ -64,7 +69,6 @@ namespace Instemic.AndroidBridge
             GUILayout.Label("1. Select APK File", EditorStyles.boldLabel);
             
             EditorGUILayout.BeginHorizontal();
-            
             apkPath = EditorGUILayout.TextField("APK Path:", apkPath);
             
             if (GUILayout.Button("Browse", GUILayout.Width(80)))
@@ -73,22 +77,57 @@ namespace Instemic.AndroidBridge
                 if (!string.IsNullOrEmpty(path))
                 {
                     apkPath = path;
+                    PreviewNativeLibraries();
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+            
+            // Show native library preview if available
+            if (nativeLibraries != null && nativeLibraries.Count > 0)
+            {
+                EditorGUILayout.Space(10);
+                EditorGUILayout.LabelField($"📱 Found {nativeLibraries.Count} native libraries in this APK", EditorStyles.miniLabel);
+            }
+            
+            EditorGUILayout.Space();
+            
+            // Extract Classes Section
+            GUILayout.Label("2. Extract Class Metadata", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Extract Java class signatures for bridge generation");
+            
+            EditorGUI.BeginDisabledGroup(isExtracting || string.IsNullOrEmpty(apkPath));
+            if (GUILayout.Button("🔍 Extract Classes", GUILayout.Height(40)))
+            {
+                StartClassExtraction();
+            }
+            EditorGUI.EndDisabledGroup();
+            
+            if (extractedClasses != null && extractedClasses.Count > 0)
+            {
+                EditorGUILayout.HelpBox($"✅ Extracted {extractedClasses.Count} classes", MessageType.Info);
+                
+                if (GUILayout.Button("📂 Browse Classes & Generate Bridges", GUILayout.Height(35)))
+                {
+                    DecompiledFileBrowser.Init(extractedClasses);
                 }
             }
             
-            EditorGUILayout.EndHorizontal();
-            
-            // Extract Button
             EditorGUILayout.Space();
-            GUILayout.Label("2. Extract Classes", EditorStyles.boldLabel);
+            
+            // Extract Native Libraries Section
+            GUILayout.Label("3. Extract Native Libraries", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Extract .so files needed for native functionality");
+            
+            copyApkToProject = EditorGUILayout.ToggleLeft(
+                "  Also copy APK to Assets/Plugins/Android/", 
+                copyApkToProject
+            );
             
             EditorGUI.BeginDisabledGroup(isExtracting || string.IsNullOrEmpty(apkPath));
-            
-            if (GUILayout.Button("🚀 Extract Class Metadata", GUILayout.Height(50)))
+            if (GUILayout.Button("📲 Extract Native Libraries (.so files)", GUILayout.Height(40)))
             {
-                StartExtraction();
+                StartNativeLibraryExtraction();
             }
-            
             EditorGUI.EndDisabledGroup();
             
             // Progress
@@ -99,24 +138,6 @@ namespace Instemic.AndroidBridge
                 EditorGUI.ProgressBar(GUILayoutUtility.GetRect(18, 18), progress, $"{(int)(progress * 100)}%");
             }
             
-            // Browse Results
-            if (extractedClasses != null && extractedClasses.Count > 0)
-            {
-                EditorGUILayout.Space();
-                GUILayout.Label("✅ Extraction Complete!", EditorStyles.boldLabel);
-                
-                EditorGUILayout.HelpBox(
-                    $"Found {extractedClasses.Count} classes!\n\n" +
-                    "Click 'Browse Classes' to explore and generate bridges.",
-                    MessageType.Info
-                );
-                
-                if (GUILayout.Button("📂 Browse Extracted Classes", GUILayout.Height(50)))
-                {
-                    DecompiledFileBrowser.Init(extractedClasses);
-                }
-            }
-            
             // Info Section
             EditorGUILayout.Space(20);
             DrawInfoSection();
@@ -124,35 +145,44 @@ namespace Instemic.AndroidBridge
         
         void DrawInfoSection()
         {
-            GUILayout.Label("ℹ️ How It Works", EditorStyles.boldLabel);
+            GUILayout.Label("ℹ️ Complete Setup Process", EditorStyles.boldLabel);
             
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             
-            EditorGUILayout.LabelField("What this extracts:", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("• Class names and packages");
-            EditorGUILayout.LabelField("• Public method signatures");
-            EditorGUILayout.LabelField("• Return types and parameters");
-            EditorGUILayout.LabelField("• Static/instance method flags");
+            EditorGUILayout.LabelField("To use an APK's functionality:", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("1. Extract classes → Generate C# bridges");
+            EditorGUILayout.LabelField("2. Extract native libraries → Get .so files");
+            EditorGUILayout.LabelField("3. Copy APK → Add to Unity project");
             
             EditorGUILayout.Space();
             
-            EditorGUILayout.LabelField("Perfect for:", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("• Generating C# bridges automatically");
-            EditorGUILayout.LabelField("• Understanding APK structure");
-            EditorGUILayout.LabelField("• Quick class discovery");
+            EditorGUILayout.LabelField("Files will be placed in:", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("• APK: Assets/Plugins/Android/[apkname].apk");
+            EditorGUILayout.LabelField("• Libraries: Assets/Plugins/Android/libs/[arch]/");
+            EditorGUILayout.LabelField("• Bridges: Generate and save manually");
             
             EditorGUILayout.Space();
             
             EditorGUILayout.HelpBox(
-                "💡 This tool parses DEX bytecode natively - no JADX or external tools needed!\n" +
-                "It's fast, self-contained, and gives you exactly what you need for bridge generation.",
+                "💡 This gives you everything needed to call the APK's functionality from Unity C#!",
                 MessageType.Info
             );
             
             EditorGUILayout.EndVertical();
         }
         
-        void StartExtraction()
+        void PreviewNativeLibraries()
+        {
+            if (string.IsNullOrEmpty(apkPath) || !File.Exists(apkPath))
+            {
+                nativeLibraries = null;
+                return;
+            }
+            
+            nativeLibraries = NativeLibraryExtractor.PreviewNativeLibraries(apkPath);
+        }
+        
+        void StartClassExtraction()
         {
             if (!File.Exists(apkPath))
             {
@@ -162,17 +192,46 @@ namespace Instemic.AndroidBridge
             
             isExtracting = true;
             progress = 0f;
-            progressMessage = "Starting extraction...";
+            progressMessage = "Extracting classes...";
             extractedClasses = null;
             
             try
             {
                 extractedClasses = APKExtractor.ExtractClasses(apkPath, OnProgress);
-                OnComplete();
+                OnClassExtractionComplete();
             }
             catch (Exception ex)
             {
-                OnError(ex.Message);
+                OnError("Class Extraction", ex.Message);
+            }
+        }
+        
+        void StartNativeLibraryExtraction()
+        {
+            if (!File.Exists(apkPath))
+            {
+                EditorUtility.DisplayDialog("Error", "APK file not found: " + apkPath, "OK");
+                return;
+            }
+            
+            isExtracting = true;
+            progress = 0f;
+            progressMessage = "Extracting native libraries...";
+            
+            try
+            {
+                var result = NativeLibraryExtractor.ExtractNativeLibraries(
+                    apkPath,
+                    null, // Use default path
+                    copyApkToProject,
+                    OnProgress
+                );
+                
+                OnNativeLibraryExtractionComplete(result);
+            }
+            catch (Exception ex)
+            {
+                OnError("Native Library Extraction", ex.Message);
             }
         }
         
@@ -183,34 +242,67 @@ namespace Instemic.AndroidBridge
             Repaint();
         }
         
-        void OnComplete()
+        void OnClassExtractionComplete()
         {
             isExtracting = false;
             progress = 1f;
             progressMessage = "Complete!";
             
-            Debug.Log($"APK extraction complete: Found {extractedClasses.Count} classes");
+            Debug.Log($"APK class extraction complete: Found {extractedClasses.Count} classes");
             
             EditorUtility.DisplayDialog(
                 "Extraction Complete",
-                "Successfully extracted " + extractedClasses.Count + " classes!\n\nClick 'Browse Extracted Classes' to explore and generate bridges.",
+                "Successfully extracted " + extractedClasses.Count + " classes!\n\nClick 'Browse Classes' to explore and generate bridges.",
                 "OK"
             );
+            
+            // Refresh to show new files
+            AssetDatabase.Refresh();
             
             Repaint();
         }
         
-        void OnError(string error)
+        void OnNativeLibraryExtractionComplete(NativeLibraryExtractor.ExtractionResult result)
+        {
+            isExtracting = false;
+            progress = 1f;
+            progressMessage = "Complete!";
+            
+            if (result.Success)
+            {
+                Debug.Log($"Native library extraction complete: Extracted {result.ExtractedLibraries.Count} libraries");
+                
+                EditorUtility.DisplayDialog(
+                    "Extraction Complete",
+                    result.Message,
+                    "OK"
+                );
+            }
+            else
+            {
+                EditorUtility.DisplayDialog(
+                    "Extraction Result",
+                    result.Message,
+                    "OK"
+                );
+            }
+            
+            // Refresh to show new files
+            AssetDatabase.Refresh();
+            
+            Repaint();
+        }
+        
+        void OnError(string operation, string error)
         {
             isExtracting = false;
             progress = 0f;
             progressMessage = "";
-            extractedClasses = null;
             
-            Debug.LogError($"APK extraction failed: {error}");
+            Debug.LogError($"{operation} failed: {error}");
             
             EditorUtility.DisplayDialog(
-                "Extraction Failed",
+                operation + " Failed",
                 "Error: " + error + "\n\nMake sure the file is a valid APK.",
                 "OK"
             );
