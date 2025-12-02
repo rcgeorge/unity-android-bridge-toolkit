@@ -27,6 +27,15 @@ namespace Instemic.AndroidBridge
             window.Show();
         }
         
+        /// <summary>
+        /// Set the output code directly (used by APK Decompiler)
+        /// </summary>
+        public void SetOutputCode(string code)
+        {
+            generatedCSharp = code;
+            Repaint();
+        }
+        
         void OnGUI()
         {
             DrawHeader();
