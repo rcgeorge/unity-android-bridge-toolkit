@@ -38,7 +38,7 @@ namespace Instemic.AndroidBridge
             Debug.Log("AAR Builder - Coming in v1.1!");
             EditorUtility.DisplayDialog(
                 "Coming Soon",
-                "AAR Builder is coming in v1.1!\\n\\n" +
+                "AAR Builder is coming in v1.1!\n\n" +
                 "For now, use Gradle manually to build AARs from your Java code.",
                 "OK"
             );
