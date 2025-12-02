@@ -20,7 +20,8 @@ namespace Instemic.AndroidBridge.Core
         public static string Generate(string javaSource)
         {
             // Parse Java
-            JavaClass javaClass = JavaParser.Parse(javaSource);
+            var parser = new Instemic.AndroidBridge.JavaParser(javaSource);
+            JavaClass javaClass = parser.Parse();
             
             // Generate C# bridge
             return GenerateCSharpBridge(javaClass);
