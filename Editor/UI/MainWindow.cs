@@ -75,40 +75,43 @@ namespace Instemic.AndroidBridge
             EditorGUILayout.Space();
             
             EditorGUILayout.HelpBox(
-                "✅ Complete APK Integration Toolkit - No External Tools!\n\n" +
-                "Everything you need to use Android APKs in Unity:\n\n" +
-                "1. Extract APK → Classes + Native Libraries (✅ Available Now!)\n" +
-                "2. Generate Bridge → Convert Java to C# automatically (✅ Available Now!)\n" +
-                "3. Build AAR → Package custom Java code (Coming v1.1)\n\n" +
-                "💡 NEW: Extract .so files + copy APK to your project automatically!",
+                "✅ Complete End-to-End Workflow - Now Available!\n\n" +
+                "From APK to Unity - completely self-contained:\n\n" +
+                "1. Extract APK → Learn API + Get Native Libraries ✅\n" +
+                "2. Build AAR → Create your own wrapper ✅ NEW!\n" +
+                "3. Generate Bridge → Auto-generate C# code ✅\n" +
+                "4. Use in Unity → Call native functionality ✅\n\n" +
+                "💡 No dependency on original APK - create standalone wrappers!",
                 MessageType.Info
             );
             
             EditorGUILayout.Space();
             
-            GUILayout.Label("✅ Available Now", EditorStyles.boldLabel);
+            GUILayout.Label("✅ Complete Workflow Available", EditorStyles.boldLabel);
             
-            EditorGUILayout.BeginHorizontal();
-            
-            if (GUILayout.Button("Extract APK\n(Classes + Libraries)", GUILayout.Height(60)))
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField("Step 1: Extract from APK", EditorStyles.boldLabel);
+            if (GUILayout.Button("Extract APK Classes & Libraries", GUILayout.Height(40)))
             {
                 currentTab = 1;
             }
             
-            if (GUILayout.Button("Generate C# Bridge", GUILayout.Height(60)))
+            EditorGUILayout.Space(10);
+            
+            EditorGUILayout.LabelField("Step 2: Create Your Wrapper", EditorStyles.boldLabel);
+            if (GUILayout.Button("Build AAR from Java Code", GUILayout.Height(40)))
+            {
+                currentTab = 3;
+            }
+            
+            EditorGUILayout.Space(10);
+            
+            EditorGUILayout.LabelField("Step 3: Generate C# Bridge", EditorStyles.boldLabel);
+            if (GUILayout.Button("Generate Unity Bridge", GUILayout.Height(40)))
             {
                 currentTab = 2;
             }
-            
-            EditorGUILayout.EndHorizontal();
-            
-            EditorGUILayout.Space();
-            
-            GUILayout.Label("🚧 Coming in v1.1", EditorStyles.boldLabel);
-            
-            EditorGUI.BeginDisabledGroup(true);
-            GUILayout.Button("Build AAR Library", GUILayout.Height(40));
-            EditorGUI.EndDisabledGroup();
+            EditorGUILayout.EndVertical();
             
             EditorGUILayout.Space(20);
             
@@ -116,14 +119,14 @@ namespace Instemic.AndroidBridge
             
             EditorGUILayout.BeginHorizontal();
             
-            if (GUILayout.Button("Quick Start Guide"))
+            if (GUILayout.Button("Complete Workflow Guide"))
             {
-                Application.OpenURL("https://github.com/rcgeorge/unity-android-bridge-toolkit/blob/main/Documentation/QuickStart.md");
+                Application.OpenURL("https://github.com/rcgeorge/unity-android-bridge-toolkit/blob/main/COMPLETE_APK_INTEGRATION.md");
             }
             
-            if (GUILayout.Button("Native Extractor Docs"))
+            if (GUILayout.Button("Quick Start"))
             {
-                Application.OpenURL("https://github.com/rcgeorge/unity-android-bridge-toolkit/blob/main/NATIVE_APK_EXTRACTOR.md");
+                Application.OpenURL("https://github.com/rcgeorge/unity-android-bridge-toolkit/blob/main/Documentation/QuickStart.md");
             }
             
             if (GUILayout.Button("Report Issue"))
@@ -146,20 +149,19 @@ namespace Instemic.AndroidBridge
         
         void DrawExtractorTab()
         {
-            GUILayout.Label("1. Extract APK - Complete Setup", EditorStyles.largeLabel);
+            GUILayout.Label("1. Extract APK - Learn API & Get Libraries", EditorStyles.largeLabel);
             
             EditorGUILayout.HelpBox(
-                "✅ Complete APK Integration - Available Now!\n\n" +
-                "Extract everything needed from APK files:\n\n" +
+                "✅ Extract Everything from APK\n\n" +
                 "Class Metadata:\n" +
-                "• Class names and packages\n" +
+                "• Learn the SDK's API structure\n" +
                 "• Method signatures and types\n" +
-                "• Perfect for bridge generation\n\n" +
+                "• Use as reference for your wrapper\n\n" +
                 "Native Libraries:\n" +
                 "• Extract .so files for all architectures\n" +
-                "• Automatically place in Assets/Plugins/Android/libs/\n" +
-                "• Optionally copy APK to project\n\n" +
-                "💡 Everything self-contained - no JADX, no external tools!",
+                "• Place in Assets/Plugins/Android/libs/\n" +
+                "• Link in your AAR wrapper\n\n" +
+                "💡 Study the APK, then create your own implementation!",
                 MessageType.Info
             );
             
@@ -169,20 +171,6 @@ namespace Instemic.AndroidBridge
             {
                 APKDecompilerWindow.Init();
             }
-            
-            EditorGUILayout.Space();
-            
-            EditorGUILayout.LabelField("Complete workflow:", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox(
-                "1. Select an APK file\n" +
-                "2. Extract class metadata\n" +
-                "3. Extract native libraries (.so files)\n" +
-                "4. Browse classes\n" +
-                "5. Generate C# bridges\n" +
-                "6. Use in your Unity project!\n\n" +
-                "Everything is set up automatically!",
-                MessageType.None
-            );
         }
         
         void DrawBridgeGeneratorTab()
@@ -190,14 +178,16 @@ namespace Instemic.AndroidBridge
             GUILayout.Label("2. Generate Bridge", EditorStyles.largeLabel);
             
             EditorGUILayout.HelpBox(
-                "✅ Bridge Generator - Available Now!\n\n" +
-                "Automatically generate C# Unity bridge code from Java source.\n\n" +
+                "✅ Auto-Generate C# Bridges\n\n" +
+                "Use AFTER building your AAR:\n\n" +
+                "1. Paste your Java wrapper code\n" +
+                "2. Generate C# bridge automatically\n" +
+                "3. Save to your Unity project\n" +
+                "4. Call native functionality from Unity!\n\n" +
                 "Features:\n" +
-                "• Parse Java classes and methods\n" +
-                "• Generate C# AndroidJavaClass/Object bridges\n" +
-                "• Handle static and instance methods\n" +
-                "• XML documentation comments\n" +
-                "• PascalCase method naming",
+                "• AndroidJavaClass/Object wrappers\n" +
+                "• PascalCase naming\n" +
+                "• XML documentation",
                 MessageType.Info
             );
             
@@ -207,50 +197,53 @@ namespace Instemic.AndroidBridge
             {
                 BridgeGeneratorWindow.Init();
             }
-            
-            EditorGUILayout.Space();
-            
-            EditorGUILayout.LabelField("Example Input (Java):", EditorStyles.boldLabel);
-            EditorGUILayout.TextArea(
-                "package com.example;\n" +
-                "public class SDK {\n" +
-                "    public static void init() { }\n" +
-                "    public static String getMessage() { return \"Hello\"; }\n" +
-                "}",
-                GUILayout.Height(80)
-            );
-            
-            EditorGUILayout.LabelField("Example Output (C#):", EditorStyles.boldLabel);
-            EditorGUILayout.TextArea(
-                "public class SDKBridge {\n" +
-                "    private static AndroidJavaClass javaClass;\n" +
-                "    static SDKBridge() {\n" +
-                "        javaClass = new AndroidJavaClass(\"com.example.SDK\");\n" +
-                "    }\n" +
-                "    public static void Init() {\n" +
-                "        javaClass.CallStatic(\"init\");\n" +
-                "    }\n" +
-                "    public static string GetMessage() {\n" +
-                "        return javaClass.CallStatic<string>(\"getMessage\");\n" +
-                "    }\n" +
-                "}",
-                GUILayout.Height(150)
-            );
         }
         
         void DrawAARBuilderTab()
         {
-            GUILayout.Label("3. Build AAR", EditorStyles.largeLabel);
+            GUILayout.Label("3. Build AAR - Create Your Wrapper", EditorStyles.largeLabel);
             
             EditorGUILayout.HelpBox(
-                "🔨 AAR Builder\n\n" +
-                "Build Android AAR libraries without Android Studio.\n\n" +
-                "Use this to:\n" +
-                "• Package your Java bridge implementations\n" +
-                "• Create plugins from generated code\n" +
-                "• Build AARs with Gradle directly\n\n" +
-                "🚧 Coming in v1.1!",
-                MessageType.Warning
+                "✅ AAR Builder - Now Available!\n\n" +
+                "Create standalone wrapper AARs:\n\n" +
+                "Workflow:\n" +
+                "1. Write Java wrapper code\n" +
+                "   • Loads your .so library\n" +
+                "   • Declares native methods\n" +
+                "   • Based on API learned from APK\n\n" +
+                "2. Build AAR with Gradle\n" +
+                "   • Compiles Java code\n" +
+                "   • Packages into AAR\n" +
+                "   • Copies to Unity project\n\n" +
+                "3. No dependency on original APK!\n\n" +
+                "Requirements:\n" +
+                "• Gradle must be installed\n" +
+                "• JAVA_HOME must be set",
+                MessageType.Info
+            );
+            
+            EditorGUILayout.Space();
+            
+            if (GUILayout.Button("Open AAR Builder", GUILayout.Height(50)))
+            {
+                AARBuilderWindow.Init();
+            }
+            
+            EditorGUILayout.Space();
+            
+            EditorGUILayout.LabelField("Example workflow:", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "// Step 1: Extract ghostparty.apk\n" +
+                "// Learn: IXRHandTracking.enterExclusiveHandTracking()\n" +
+                "// Extract: libviture_sdk.so\n\n" +
+                "// Step 2: Write VitureSDKWrapper.java\n" +
+                "static { System.loadLibrary(\"viture_sdk\"); }\n" +
+                "public static native boolean enterExclusiveHandTracking();\n\n" +
+                "// Step 3: Build VitureSDKWrapper.aar\n\n" +
+                "// Step 4: Generate VitureSDKWrapperBridge.cs\n\n" +
+                "// Step 5: Use in Unity!\n" +
+                "VitureSDKWrapperBridge.EnterExclusiveHandTracking();",
+                MessageType.None
             );
         }
         
