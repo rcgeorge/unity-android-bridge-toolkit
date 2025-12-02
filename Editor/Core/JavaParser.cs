@@ -5,7 +5,7 @@
 
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using Instemic.AndroidBridge.Models;
+using Instemic.AndroidBridge.Core;
 
 namespace Instemic.AndroidBridge
 {
