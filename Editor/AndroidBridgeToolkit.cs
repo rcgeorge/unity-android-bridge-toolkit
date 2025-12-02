@@ -20,11 +20,10 @@ namespace Instemic.AndroidBridge
             MainWindow.Init();
         }
         
-        [MenuItem("Tools/Android Bridge Toolkit/1. Decompile APK", priority = 100)]
+        [MenuItem("Tools/Android Bridge Toolkit/1. Extract APK Classes", priority = 100)]
         public static void ShowDecompiler()
         {
-            // APKDecompilerWindow.Init();
-            Debug.Log("APK Decompiler - Coming in v1.1!");
+            APKDecompilerWindow.Init();
         }
         
         [MenuItem("Tools/Android Bridge Toolkit/2. Generate Bridge", priority = 101)]
@@ -36,8 +35,13 @@ namespace Instemic.AndroidBridge
         [MenuItem("Tools/Android Bridge Toolkit/3. Build AAR", priority = 102)]
         public static void ShowAARBuilder()
         {
-            // AARBuilderWindow.Init();
             Debug.Log("AAR Builder - Coming in v1.1!");
+            EditorUtility.DisplayDialog(
+                "Coming Soon",
+                "AAR Builder is coming in v1.1!\\n\\n" +
+                "For now, use Gradle manually to build AARs from your Java code.",
+                "OK"
+            );
         }
         
         [MenuItem("Tools/Android Bridge Toolkit/Settings", priority = 200)]
