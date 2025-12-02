@@ -14,33 +14,33 @@ namespace Instemic.AndroidBridge
     /// </summary>
     public static class AndroidBridgeToolkit
     {
-        [MenuItem("Tools/Android Bridge Toolkit")]
+        [MenuItem("Tools/Android Bridge Toolkit/Open Main Window", priority = 0)]
         public static void ShowMainWindow()
         {
             MainWindow.Init();
         }
         
-        [MenuItem("Tools/Android Bridge Toolkit/Decompile APK")]
-        public static void ShowDecompiler()
+        [MenuItem("Tools/Android Bridge Toolkit/Generate Bridge", priority = 100)]
+        public static void ShowBridgeGenerator()
         {
-            // APKDecompilerWindow.Init();
-            Debug.Log("APK Decompiler - Coming soon!");
+            BridgeGeneratorWindow.Init();
         }
         
-        [MenuItem("Tools/Android Bridge Toolkit/Build AAR")]
+        [MenuItem("Tools/Android Bridge Toolkit/Build AAR", priority = 200)]
         public static void ShowAARBuilder()
         {
             // AARBuilderWindow.Init();
             Debug.Log("AAR Builder - Coming soon!");
         }
         
-        [MenuItem("Tools/Android Bridge Toolkit/Generate Bridge")]
-        public static void ShowBridgeGenerator()
+        [MenuItem("Tools/Android Bridge Toolkit/Decompile APK", priority = 201)]
+        public static void ShowDecompiler()
         {
-            BridgeGeneratorWindow.Init();
+            // APKDecompilerWindow.Init();
+            Debug.Log("APK Decompiler - Coming soon!");
         }
         
-        [MenuItem("Tools/Android Bridge Toolkit/Settings")]
+        [MenuItem("Tools/Android Bridge Toolkit/Settings", priority = 300)]
         public static void ShowSettings()
         {
             SettingsWindow.Init();
