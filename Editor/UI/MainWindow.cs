@@ -75,12 +75,12 @@ namespace Instemic.AndroidBridge
             EditorGUILayout.Space();
             
             EditorGUILayout.HelpBox(
-                "✅ Self-Contained Workflow - No External Tools Required!\n\n" +
-                "Complete workflow for Unity Android development:\n\n" +
-                "1. Extract APK → Extract class metadata natively (✅ Available Now!)\n" +
+                "✅ Complete APK Integration Toolkit - No External Tools!\n\n" +
+                "Everything you need to use Android APKs in Unity:\n\n" +
+                "1. Extract APK → Classes + Native Libraries (✅ Available Now!)\n" +
                 "2. Generate Bridge → Convert Java to C# automatically (✅ Available Now!)\n" +
-                "3. Build AAR → Package without Android Studio (Coming v1.1)\n\n" +
-                "💡 NEW: Native APK extraction - no JADX required!",
+                "3. Build AAR → Package custom Java code (Coming v1.1)\n\n" +
+                "💡 NEW: Extract .so files + copy APK to your project automatically!",
                 MessageType.Info
             );
             
@@ -90,12 +90,12 @@ namespace Instemic.AndroidBridge
             
             EditorGUILayout.BeginHorizontal();
             
-            if (GUILayout.Button("Extract APK Classes", GUILayout.Height(50)))
+            if (GUILayout.Button("Extract APK\n(Classes + Libraries)", GUILayout.Height(60)))
             {
                 currentTab = 1;
             }
             
-            if (GUILayout.Button("Generate C# Bridge", GUILayout.Height(50)))
+            if (GUILayout.Button("Generate C# Bridge", GUILayout.Height(60)))
             {
                 currentTab = 2;
             }
@@ -146,38 +146,41 @@ namespace Instemic.AndroidBridge
         
         void DrawExtractorTab()
         {
-            GUILayout.Label("1. Extract APK Classes", EditorStyles.largeLabel);
+            GUILayout.Label("1. Extract APK - Complete Setup", EditorStyles.largeLabel);
             
             EditorGUILayout.HelpBox(
-                "✅ Native APK Class Extractor - Available Now!\n\n" +
-                "Extract class metadata from APK files WITHOUT external tools!\n\n" +
-                "Features:\n" +
-                "• Self-contained - No JADX required\n" +
-                "• Fast native DEX parsing\n" +
-                "• Extracts class names, methods, signatures\n" +
-                "• Perfect for bridge generation\n" +
-                "• Cross-platform (Windows, Mac, Linux)\n\n" +
-                "💡 This tool parses DEX bytecode natively in C#!",
+                "✅ Complete APK Integration - Available Now!\n\n" +
+                "Extract everything needed from APK files:\n\n" +
+                "Class Metadata:\n" +
+                "• Class names and packages\n" +
+                "• Method signatures and types\n" +
+                "• Perfect for bridge generation\n\n" +
+                "Native Libraries:\n" +
+                "• Extract .so files for all architectures\n" +
+                "• Automatically place in Assets/Plugins/Android/libs/\n" +
+                "• Optionally copy APK to project\n\n" +
+                "💡 Everything self-contained - no JADX, no external tools!",
                 MessageType.Info
             );
             
             EditorGUILayout.Space();
             
-            if (GUILayout.Button("Open APK Class Extractor", GUILayout.Height(50)))
+            if (GUILayout.Button("Open APK Extractor", GUILayout.Height(50)))
             {
                 APKDecompilerWindow.Init();
             }
             
             EditorGUILayout.Space();
             
-            EditorGUILayout.LabelField("How it works:", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Complete workflow:", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
                 "1. Select an APK file\n" +
-                "2. Extract class metadata (fast!)\n" +
-                "3. Browse extracted classes\n" +
-                "4. Select a class\n" +
-                "5. Generate C# bridge automatically\n\n" +
-                "No JADX, no Java, no external tools needed!",
+                "2. Extract class metadata\n" +
+                "3. Extract native libraries (.so files)\n" +
+                "4. Browse classes\n" +
+                "5. Generate C# bridges\n" +
+                "6. Use in your Unity project!\n\n" +
+                "Everything is set up automatically!",
                 MessageType.None
             );
         }
