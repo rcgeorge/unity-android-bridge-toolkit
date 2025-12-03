@@ -37,8 +37,8 @@ namespace Instemic.AndroidBridge
         private List<string> nativeLibraries = new List<string>();
         
         // Step 2: Select Classes
-        private List<ClassMetadata> allClasses = new List<ClassMetadata>();
-        private List<ClassMetadata> selectedClasses = new List<ClassMetadata>();
+        private List<APKExtractor.ClassMetadata> allClasses = new List<APKExtractor.ClassMetadata>();
+        private List<APKExtractor.ClassMetadata> selectedClasses = new List<APKExtractor.ClassMetadata>();
         private Vector2 classScrollPos;
         private string classSearchFilter = "";
         
