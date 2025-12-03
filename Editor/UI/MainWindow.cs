@@ -75,13 +75,13 @@ namespace Instemic.AndroidBridge
             EditorGUILayout.Space();
             
             EditorGUILayout.HelpBox(
-                "✅ Complete End-to-End Workflow - Now Available!\n\n" +
-                "From APK to Unity - completely self-contained:\n\n" +
+                "✅ Complete End-to-End Workflow - Fully Self-Contained!\n\n" +
+                "From APK to Unity - NO external tools required:\n\n" +
                 "1. Extract APK → Learn API + Get Native Libraries ✅\n" +
-                "2. Build AAR → Create your own wrapper ✅ NEW!\n" +
+                "2. Build AAR → Create wrapper (NO GRADLE!) ✅\n" +
                 "3. Generate Bridge → Auto-generate C# code ✅\n" +
                 "4. Use in Unity → Call native functionality ✅\n\n" +
-                "💡 No dependency on original APK - create standalone wrappers!",
+                "💡 Only requirement: JDK (Unity needs this anyway!)",
                 MessageType.Info
             );
             
@@ -99,7 +99,7 @@ namespace Instemic.AndroidBridge
             EditorGUILayout.Space(10);
             
             EditorGUILayout.LabelField("Step 2: Create Your Wrapper", EditorStyles.boldLabel);
-            if (GUILayout.Button("Build AAR from Java Code", GUILayout.Height(40)))
+            if (GUILayout.Button("Build AAR (No Gradle!)", GUILayout.Height(40)))
             {
                 currentTab = 3;
             }
@@ -121,7 +121,7 @@ namespace Instemic.AndroidBridge
             
             if (GUILayout.Button("Complete Workflow Guide"))
             {
-                Application.OpenURL("https://github.com/rcgeorge/unity-android-bridge-toolkit/blob/main/COMPLETE_APK_INTEGRATION.md");
+                Application.OpenURL("https://github.com/rcgeorge/unity-android-bridge-toolkit/blob/main/END_TO_END_WORKFLOW.md");
             }
             
             if (GUILayout.Button("Quick Start"))
@@ -201,24 +201,26 @@ namespace Instemic.AndroidBridge
         
         void DrawAARBuilderTab()
         {
-            GUILayout.Label("3. Build AAR - Create Your Wrapper", EditorStyles.largeLabel);
+            GUILayout.Label("3. Build AAR - No Gradle Required!", EditorStyles.largeLabel);
             
             EditorGUILayout.HelpBox(
-                "✅ AAR Builder - Now Available!\n\n" +
-                "Create standalone wrapper AARs:\n\n" +
-                "Workflow:\n" +
+                "✅ AAR Builder - Native C# Implementation!\n\n" +
+                "Build AARs using only javac + C# ZIP:\n\n" +
+                "How it works:\n" +
                 "1. Write Java wrapper code\n" +
                 "   • Loads your .so library\n" +
                 "   • Declares native methods\n" +
                 "   • Based on API learned from APK\n\n" +
-                "2. Build AAR with Gradle\n" +
-                "   • Compiles Java code\n" +
-                "   • Packages into AAR\n" +
+                "2. Build with javac (not Gradle!)\n" +
+                "   • Compiles Java → .class files\n" +
+                "   • Creates JAR with C# ZipArchive\n" +
+                "   • Packages as AAR structure\n" +
                 "   • Copies to Unity project\n\n" +
                 "3. No dependency on original APK!\n\n" +
                 "Requirements:\n" +
-                "• Gradle must be installed\n" +
-                "• JAVA_HOME must be set",
+                "• JDK with javac (Unity needs this anyway)\n" +
+                "• JAVA_HOME environment variable\n" +
+                "• That's it! No Gradle!",
                 MessageType.Info
             );
             
@@ -239,7 +241,8 @@ namespace Instemic.AndroidBridge
                 "// Step 2: Write VitureSDKWrapper.java\n" +
                 "static { System.loadLibrary(\"viture_sdk\"); }\n" +
                 "public static native boolean enterExclusiveHandTracking();\n\n" +
-                "// Step 3: Build VitureSDKWrapper.aar\n\n" +
+                "// Step 3: Build with javac (no Gradle!)\n" +
+                "// Output: VitureSDKWrapper.aar\n\n" +
                 "// Step 4: Generate VitureSDKWrapperBridge.cs\n\n" +
                 "// Step 5: Use in Unity!\n" +
                 "VitureSDKWrapperBridge.EnterExclusiveHandTracking();",
@@ -249,14 +252,14 @@ namespace Instemic.AndroidBridge
         
         void DrawSettingsTab()
         {
-            GUILayout.Label("Settings", EditorStyles.largeLabel);
+            GUILayout.Label("Settings", EditorStyles.boldLabel);
             
             EditorGUILayout.HelpBox(
                 "⚙️ Configure Android Bridge Toolkit\n\n" +
                 "Settings available:\n" +
                 "• Code generation preferences\n" +
                 "• Output directories\n" +
-                "• Java/Gradle paths\n\n" +
+                "• Java/JDK paths\n\n" +
                 "Click below to open full settings.",
                 MessageType.Info
             );
