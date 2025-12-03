@@ -39,6 +39,7 @@ namespace Instemic.AndroidBridge
         // Step 2: Select Classes
         private List<DexClass> allClasses = new List<DexClass>();
         private List<DexClass> selectedClasses = new List<DexClass>();
+        private Dictionary<DexClass, bool> expandedClasses = new Dictionary<DexClass, bool>();
         private Vector2 classScrollPos;
         private string classSearchFilter = "";
         
@@ -206,9 +207,9 @@ namespace Instemic.AndroidBridge
             EditorGUILayout.HelpBox(
                 "Select the classes you want to use in Unity.\n\n" +
                 "Tips:\n" +
-                "• Focus on the main API classes you need\n" +
-                "• Look for SDK entry points, managers, controllers\n" +
-                "• You can always come back and add more later",
+                "• Click on a class name to expand and see its methods\n" +
+                "• Check the box to select it for your wrapper\n" +
+                "• Focus on the main API classes you need",
                 MessageType.Info
             );
             
@@ -233,8 +234,16 @@ namespace Instemic.AndroidBridge
             
             foreach (var classInfo in filteredClasses.Take(100))
             {
-                EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
+                // Initialize expanded state if needed
+                if (!expandedClasses.ContainsKey(classInfo))
+                {
+                    expandedClasses[classInfo] = false;
+                }
                 
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                EditorGUILayout.BeginHorizontal();
+                
+                // Checkbox for selection
                 bool isSelected = selectedClasses.Contains(classInfo);
                 bool newSelected = EditorGUILayout.Toggle(isSelected, GUILayout.Width(20));
                 
@@ -246,10 +255,42 @@ namespace Instemic.AndroidBridge
                         selectedClasses.Remove(classInfo);
                 }
                 
-                EditorGUILayout.LabelField(classInfo.ClassName, EditorStyles.boldLabel);
+                // Foldout arrow + class name (clickable)
+                bool wasExpanded = expandedClasses[classInfo];
+                bool isExpanded = EditorGUILayout.Foldout(wasExpanded, classInfo.ClassName, true, EditorStyles.boldLabel);
+                expandedClasses[classInfo] = isExpanded;
+                
+                // Method count
                 EditorGUILayout.LabelField($"{classInfo.Methods.Count} methods", EditorStyles.miniLabel, GUILayout.Width(100));
                 
                 EditorGUILayout.EndHorizontal();
+                
+                // Show methods when expanded
+                if (isExpanded && classInfo.Methods.Count > 0)
+                {
+                    EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                    
+                    int displayCount = Math.Min(classInfo.Methods.Count, 20);
+                    for (int i = 0; i < displayCount; i++)
+                    {
+                        var method = classInfo.Methods[i];
+                        string methodSignature = $"{method.ReturnType} {method.Name}()";
+                        if (method.IsStatic)
+                            methodSignature = "static " + methodSignature;
+                        
+                        EditorGUILayout.LabelField("  • " + methodSignature, EditorStyles.miniLabel);
+                    }
+                    
+                    if (classInfo.Methods.Count > 20)
+                    {
+                        EditorGUILayout.LabelField($"  ... and {classInfo.Methods.Count - 20} more methods", EditorStyles.miniLabel);
+                    }
+                    
+                    EditorGUILayout.EndVertical();
+                }
+                
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.Space(2);
             }
             
             if (filteredClasses.Count > 100)
@@ -711,6 +752,7 @@ public class {wrapperClassName} {{
             apkLoaded = false;
             allClasses.Clear();
             selectedClasses.Clear();
+            expandedClasses.Clear();
             generatedJavaCode = "";
             aarBuilt = false;
             bridgeGenerated = false;
