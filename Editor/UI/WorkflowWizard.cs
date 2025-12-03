@@ -37,8 +37,8 @@ namespace Instemic.AndroidBridge
         private List<string> nativeLibraries = new List<string>();
         
         // Step 2: Select Classes
-        private List<APKExtractor.ClassMetadata> allClasses = new List<APKExtractor.ClassMetadata>();
-        private List<APKExtractor.ClassMetadata> selectedClasses = new List<APKExtractor.ClassMetadata>();
+        private List<DexClass> allClasses = new List<DexClass>();
+        private List<DexClass> selectedClasses = new List<DexClass>();
         private Vector2 classScrollPos;
         private string classSearchFilter = "";
         
@@ -533,27 +533,19 @@ namespace Instemic.AndroidBridge
             try
             {
                 // Extract classes
-                var result = APKExtractor.ExtractClasses(apkPath, (p, msg) => {
+                allClasses = APKExtractor.ExtractClasses(apkPath, (p, msg) => {
                     progress = p;
                     statusMessage = msg;
                     Repaint();
                 });
                 
-                if (result.Success)
-                {
-                    allClasses = result.Classes;
-                    totalClasses = allClasses.Count;
-                    
-                    // Preview native libraries
-                    nativeLibraries = NativeLibraryExtractor.PreviewNativeLibraries(apkPath);
-                    
-                    apkLoaded = true;
-                    statusMessage = "APK analyzed successfully!";
-                }
-                else
-                {
-                    EditorUtility.DisplayDialog("Error", "Failed to analyze APK: " + result.Message, "OK");
-                }
+                totalClasses = allClasses.Count;
+                
+                // Preview native libraries
+                nativeLibraries = NativeLibraryExtractor.PreviewNativeLibraries(apkPath);
+                
+                apkLoaded = true;
+                statusMessage = "APK analyzed successfully!";
             }
             catch (Exception ex)
             {
