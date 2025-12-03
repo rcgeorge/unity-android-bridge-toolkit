@@ -44,6 +44,7 @@ namespace Instemic.AndroidBridge
         private Vector2 classScrollPos;
         private string classSearchFilter = "";
         private bool groupByPackage = true;
+        private int searchMode = 0; // 0 = class name, 1 = method name
         
         // Step 3: Review Wrapper
         private string generatedJavaCode = "";
@@ -209,35 +210,57 @@ namespace Instemic.AndroidBridge
             EditorGUILayout.HelpBox(
                 "Select the classes you want to use in Unity.\n\n" +
                 "Tips:\n" +
+                "• Search by METHOD NAME to find specific functionality (getPose, 6DOF, listener)\n" +
                 "• Use 'Select Package' to select all classes in a namespace\n" +
-                "• Click class names to expand and see methods\n" +
-                "• Look for methods like get6DOF(), getPose(), getTracking() for position data",
+                "• Click class names to expand and see methods",
                 MessageType.Info
             );
             
             EditorGUILayout.Space();
             
-            // Search and view options
+            // Search mode selector
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Search:", GUILayout.Width(60));
+            EditorGUILayout.LabelField("Search by:", GUILayout.Width(70));
+            string[] searchModes = { "Class Name", "Method Name" };
+            searchMode = GUILayout.Toolbar(searchMode, searchModes, GUILayout.Width(200));
+            EditorGUILayout.EndHorizontal();
+            
+            EditorGUILayout.Space(5);
+            
+            // Search field
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Filter:", GUILayout.Width(60));
             classSearchFilter = EditorGUILayout.TextField(classSearchFilter);
             
+            if (!string.IsNullOrEmpty(classSearchFilter) && GUILayout.Button("Clear", GUILayout.Width(60)))
+            {
+                classSearchFilter = "";
+            }
+            EditorGUILayout.EndHorizontal();
+            
+            // Search hints
+            if (searchMode == 1 && string.IsNullOrEmpty(classSearchFilter))
+            {
+                EditorGUILayout.LabelField("💡 Try searching: getPose, 6DOF, listener, tracking, position", EditorStyles.miniLabel);
+            }
+            
+            EditorGUILayout.Space();
+            
+            // View options
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"Selected: {selectedClasses.Count} classes", EditorStyles.boldLabel);
             GUILayout.FlexibleSpace();
             groupByPackage = EditorGUILayout.ToggleLeft("Group by Package", groupByPackage, GUILayout.Width(150));
             EditorGUILayout.EndHorizontal();
             
             EditorGUILayout.Space();
             
-            EditorGUILayout.LabelField($"Selected: {selectedClasses.Count} classes", EditorStyles.boldLabel);
-            
             // Class list
             classScrollPos = EditorGUILayout.BeginScrollView(classScrollPos, GUILayout.Height(400));
             
-            var filteredClasses = string.IsNullOrEmpty(classSearchFilter)
-                ? allClasses
-                : allClasses.Where(c => c.ClassName.ToLower().Contains(classSearchFilter.ToLower())).ToList();
+            var filteredClasses = FilterClasses();
             
-            if (groupByPackage)
+            if (groupByPackage && searchMode == 0)
             {
                 DrawClassesByPackage(filteredClasses);
             }
@@ -247,6 +270,29 @@ namespace Instemic.AndroidBridge
             }
             
             EditorGUILayout.EndScrollView();
+        }
+        
+        List<DexClass> FilterClasses()
+        {
+            if (string.IsNullOrEmpty(classSearchFilter))
+            {
+                return allClasses;
+            }
+            
+            var filter = classSearchFilter.ToLower();
+            
+            if (searchMode == 0)
+            {
+                // Search by class name
+                return allClasses.Where(c => c.ClassName.ToLower().Contains(filter)).ToList();
+            }
+            else
+            {
+                // Search by method name - show classes that have matching methods
+                return allClasses.Where(c => 
+                    c.Methods.Any(m => m.Name.ToLower().Contains(filter))
+                ).ToList();
+            }
         }
         
         void DrawClassesByPackage(List<DexClass> classes)
@@ -338,6 +384,14 @@ namespace Instemic.AndroidBridge
         
         void DrawSingleClass(DexClass classInfo)
         {
+            // If searching by method name, count matching methods
+            int matchingMethodCount = 0;
+            if (searchMode == 1 && !string.IsNullOrEmpty(classSearchFilter))
+            {
+                var filter = classSearchFilter.ToLower();
+                matchingMethodCount = classInfo.Methods.Count(m => m.Name.ToLower().Contains(filter));
+            }
+            
             // Initialize expanded state if needed
             if (!expandedClasses.ContainsKey(classInfo))
             {
@@ -361,17 +415,24 @@ namespace Instemic.AndroidBridge
             
             // Foldout arrow + class name (show simple name in grouped view, full name otherwise)
             bool wasExpanded = expandedClasses[classInfo];
-            string displayName = groupByPackage ? classInfo.GetSimpleClassName() : classInfo.ClassName;
+            string displayName = (groupByPackage && searchMode == 0) ? classInfo.GetSimpleClassName() : classInfo.ClassName;
             bool isExpanded = EditorGUILayout.Foldout(wasExpanded, displayName, true);
             expandedClasses[classInfo] = isExpanded;
             
-            // Method count
-            EditorGUILayout.LabelField($"{classInfo.Methods.Count} methods", EditorStyles.miniLabel, GUILayout.Width(100));
+            // Method count (show matching count if searching by method)
+            if (matchingMethodCount > 0)
+            {
+                EditorGUILayout.LabelField($"{matchingMethodCount} matching", EditorStyles.boldLabel, GUILayout.Width(100));
+            }
+            else
+            {
+                EditorGUILayout.LabelField($"{classInfo.Methods.Count} methods", EditorStyles.miniLabel, GUILayout.Width(100));
+            }
             
             EditorGUILayout.EndHorizontal();
             
             // Show full path as subtitle when grouped
-            if (groupByPackage)
+            if (groupByPackage && searchMode == 0)
             {
                 EditorGUILayout.LabelField("  " + classInfo.ClassName, EditorStyles.miniLabel);
             }
@@ -381,20 +442,39 @@ namespace Instemic.AndroidBridge
             {
                 EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                 
-                int displayCount = Math.Min(classInfo.Methods.Count, 20);
+                // Filter methods if searching by method name
+                var methodsToShow = classInfo.Methods;
+                if (searchMode == 1 && !string.IsNullOrEmpty(classSearchFilter))
+                {
+                    var filter = classSearchFilter.ToLower();
+                    methodsToShow = classInfo.Methods.Where(m => m.Name.ToLower().Contains(filter)).ToList();
+                }
+                
+                int displayCount = Math.Min(methodsToShow.Count, 20);
                 for (int i = 0; i < displayCount; i++)
                 {
-                    var method = classInfo.Methods[i];
+                    var method = methodsToShow[i];
                     string methodSignature = $"{method.ReturnType} {method.Name}()";
                     if (method.IsStatic)
                         methodSignature = "static " + methodSignature;
                     
-                    EditorGUILayout.LabelField("  • " + methodSignature, EditorStyles.miniLabel);
+                    // Highlight matching methods
+                    bool isMatch = searchMode == 1 && !string.IsNullOrEmpty(classSearchFilter) && 
+                                   method.Name.ToLower().Contains(classSearchFilter.ToLower());
+                    
+                    if (isMatch)
+                    {
+                        EditorGUILayout.LabelField("  ⭐ " + methodSignature, EditorStyles.boldLabel);
+                    }
+                    else
+                    {
+                        EditorGUILayout.LabelField("  • " + methodSignature, EditorStyles.miniLabel);
+                    }
                 }
                 
-                if (classInfo.Methods.Count > 20)
+                if (methodsToShow.Count > 20)
                 {
-                    EditorGUILayout.LabelField($"  ... and {classInfo.Methods.Count - 20} more methods", EditorStyles.miniLabel);
+                    EditorGUILayout.LabelField($"  ... and {methodsToShow.Count - 20} more methods", EditorStyles.miniLabel);
                 }
                 
                 EditorGUILayout.EndVertical();
