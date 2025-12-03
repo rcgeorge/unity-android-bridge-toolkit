@@ -651,11 +651,8 @@ public class {wrapperClassName} {{
         
         void GenerateCSharpBridge()
         {
-            var generator = new BridgeGenerator();
-            csharpBridgeCode = generator.GenerateBridge(generatedJavaCode, new BridgeGenerator.BridgeConfig
-            {
-                ClassName = wrapperClassName + "Bridge"
-            });
+            // BridgeGenerator.Generate() is a static method
+            csharpBridgeCode = BridgeGenerator.Generate(generatedJavaCode);
             
             bridgeGenerated = true;
         }
