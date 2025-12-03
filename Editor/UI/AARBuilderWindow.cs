@@ -4,7 +4,6 @@
 //
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEditor;
@@ -13,14 +12,13 @@ using Instemic.AndroidBridge.Core;
 namespace Instemic.AndroidBridge
 {
     /// <summary>
-    /// Window for building Android AAR libraries from Java code
+    /// Window for building Android AAR libraries from Java code - NO GRADLE REQUIRED!
     /// </summary>
     public class AARBuilderWindow : EditorWindow
     {
         private string projectName = "VitureWrapper";
         private string packageName = "com.yourcompany.viture";
         private string javaCode = "";
-        private List<string> javaFiles = new List<string>();
         
         private bool isBuilding = false;
         private float progress = 0f;
@@ -71,15 +69,16 @@ namespace Instemic.AndroidBridge
         
         void DrawHeader()
         {
-            GUILayout.Label("🔨 AAR Builder - Create Native Wrappers", EditorStyles.largeLabel);
+            GUILayout.Label("🔨 AAR Builder - No Gradle Required!", EditorStyles.largeLabel);
             
             EditorGUILayout.HelpBox(
-                "Build AAR libraries from Java wrapper code\n\n" +
+                "✅ Build AAR libraries using only javac + C#\n\n" +
                 "Workflow:\n" +
                 "1. Write Java wrapper code (loads native .so library)\n" +
                 "2. Configure project settings\n" +
-                "3. Build AAR\n" +
-                "4. Use with C# bridges in Unity!",
+                "3. Build AAR (uses javac, not Gradle!)\n" +
+                "4. Use with C# bridges in Unity!\n\n" +
+                "Requirements: Only JDK (Unity already needs this for Android)",
                 MessageType.Info
             );
         }
@@ -161,19 +160,21 @@ namespace Instemic.AndroidBridge
             if (!isBuilding)
             {
                 EditorGUILayout.HelpBox(
-                    "Ready to build!\n\n" +
+                    "✅ Ready to build - No Gradle required!\n\n" +
                     "This will:\n" +
-                    "1. Create Gradle project\n" +
-                    "2. Compile Java code\n" +
-                    "3. Package into AAR\n" +
+                    "1. Compile Java code with javac\n" +
+                    "2. Package classes into JAR\n" +
+                    "3. Create AAR structure (ZIP format)\n" +
                     "4. Copy to Assets/Plugins/Android/\n\n" +
-                    "Make sure you have Gradle installed!",
+                    "Requirements:\n" +
+                    "• JDK installed (Unity needs this anyway)\n" +
+                    "• JAVA_HOME environment variable set",
                     MessageType.Info
                 );
                 
                 EditorGUILayout.Space();
                 
-                if (GUILayout.Button("🚀 Build AAR", GUILayout.Height(50)))
+                if (GUILayout.Button("🚀 Build AAR (Native - No Gradle!)", GUILayout.Height(50)))
                 {
                     StartBuild();
                 }
@@ -273,16 +274,11 @@ public class VitureSDKWrapper {
         
         void StartBuild()
         {
-            // Save code to temp file first
-            var tempPath = Path.Combine(Application.dataPath, "..", "Temp", "TempJavaWrapper.java");
-            Directory.CreateDirectory(Path.GetDirectoryName(tempPath));
-            File.WriteAllText(tempPath, javaCode);
-            
-            var config = new AARBuilder.BuildConfig
+            var config = new AARBuilderNative.BuildConfig
             {
                 ProjectName = projectName,
                 PackageName = packageName,
-                JavaSourceFiles = new List<string> { tempPath },
+                JavaCode = javaCode,
                 CopyToPlugins = true
             };
             
@@ -293,7 +289,7 @@ public class VitureSDKWrapper {
             
             try
             {
-                var result = AARBuilder.BuildAAR(config, OnProgress);
+                var result = AARBuilderNative.BuildAAR(config, OnProgress);
                 OnBuildComplete(result);
             }
             catch (Exception ex)
@@ -309,7 +305,7 @@ public class VitureSDKWrapper {
             Repaint();
         }
         
-        void OnBuildComplete(AARBuilder.BuildResult result)
+        void OnBuildComplete(AARBuilderNative.BuildResult result)
         {
             isBuilding = false;
             progress = 1f;
