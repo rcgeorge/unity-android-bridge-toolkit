@@ -40,8 +40,10 @@ namespace Instemic.AndroidBridge
         private List<DexClass> allClasses = new List<DexClass>();
         private List<DexClass> selectedClasses = new List<DexClass>();
         private Dictionary<DexClass, bool> expandedClasses = new Dictionary<DexClass, bool>();
+        private Dictionary<string, bool> expandedPackages = new Dictionary<string, bool>();
         private Vector2 classScrollPos;
         private string classSearchFilter = "";
+        private bool groupByPackage = true;
         
         // Step 3: Review Wrapper
         private string generatedJavaCode = "";
@@ -207,18 +209,21 @@ namespace Instemic.AndroidBridge
             EditorGUILayout.HelpBox(
                 "Select the classes you want to use in Unity.\n\n" +
                 "Tips:\n" +
-                "• Click on a class name to expand and see its methods\n" +
-                "• Check the box to select it for your wrapper\n" +
-                "• Focus on the main API classes you need",
+                "• Use 'Select Package' to select all classes in a namespace\n" +
+                "• Click class names to expand and see methods\n" +
+                "• Look for methods like get6DOF(), getPose(), getTracking() for position data",
                 MessageType.Info
             );
             
             EditorGUILayout.Space();
             
-            // Search
+            // Search and view options
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Search:", GUILayout.Width(60));
             classSearchFilter = EditorGUILayout.TextField(classSearchFilter);
+            
+            GUILayout.FlexibleSpace();
+            groupByPackage = EditorGUILayout.ToggleLeft("Group by Package", groupByPackage, GUILayout.Width(150));
             EditorGUILayout.EndHorizontal();
             
             EditorGUILayout.Space();
@@ -232,73 +237,171 @@ namespace Instemic.AndroidBridge
                 ? allClasses
                 : allClasses.Where(c => c.ClassName.ToLower().Contains(classSearchFilter.ToLower())).ToList();
             
-            foreach (var classInfo in filteredClasses.Take(100))
+            if (groupByPackage)
             {
-                // Initialize expanded state if needed
-                if (!expandedClasses.ContainsKey(classInfo))
+                DrawClassesByPackage(filteredClasses);
+            }
+            else
+            {
+                DrawClassesList(filteredClasses);
+            }
+            
+            EditorGUILayout.EndScrollView();
+        }
+        
+        void DrawClassesByPackage(List<DexClass> classes)
+        {
+            // Group classes by package
+            var packageGroups = classes
+                .GroupBy(c => c.GetPackageName())
+                .OrderBy(g => g.Key)
+                .Take(50); // Limit packages shown
+            
+            foreach (var packageGroup in packageGroups)
+            {
+                var packageName = packageGroup.Key;
+                var classesInPackage = packageGroup.ToList();
+                
+                // Initialize expanded state
+                if (!expandedPackages.ContainsKey(packageName))
                 {
-                    expandedClasses[classInfo] = false;
+                    expandedPackages[packageName] = false;
                 }
                 
                 EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                 EditorGUILayout.BeginHorizontal();
                 
-                // Checkbox for selection
-                bool isSelected = selectedClasses.Contains(classInfo);
-                bool newSelected = EditorGUILayout.Toggle(isSelected, GUILayout.Width(20));
+                // Package foldout
+                bool wasExpanded = expandedPackages[packageName];
+                bool isExpanded = EditorGUILayout.Foldout(wasExpanded, $"📦 {packageName}", true, EditorStyles.boldLabel);
+                expandedPackages[packageName] = isExpanded;
                 
-                if (newSelected != isSelected)
+                // Class count and Select All button
+                EditorGUILayout.LabelField($"{classesInPackage.Count} classes", EditorStyles.miniLabel, GUILayout.Width(100));
+                
+                if (GUILayout.Button("Select All", GUILayout.Width(80)))
                 {
-                    if (newSelected)
-                        selectedClasses.Add(classInfo);
-                    else
-                        selectedClasses.Remove(classInfo);
+                    foreach (var cls in classesInPackage)
+                    {
+                        if (!selectedClasses.Contains(cls))
+                        {
+                            selectedClasses.Add(cls);
+                        }
+                    }
                 }
                 
-                // Foldout arrow + class name (clickable)
-                bool wasExpanded = expandedClasses[classInfo];
-                bool isExpanded = EditorGUILayout.Foldout(wasExpanded, classInfo.ClassName, true, EditorStyles.boldLabel);
-                expandedClasses[classInfo] = isExpanded;
-                
-                // Method count
-                EditorGUILayout.LabelField($"{classInfo.Methods.Count} methods", EditorStyles.miniLabel, GUILayout.Width(100));
+                if (GUILayout.Button("Deselect All", GUILayout.Width(90)))
+                {
+                    foreach (var cls in classesInPackage)
+                    {
+                        selectedClasses.Remove(cls);
+                    }
+                }
                 
                 EditorGUILayout.EndHorizontal();
                 
-                // Show methods when expanded
-                if (isExpanded && classInfo.Methods.Count > 0)
+                // Show classes when expanded
+                if (isExpanded)
                 {
-                    EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                    EditorGUI.indentLevel++;
                     
-                    int displayCount = Math.Min(classInfo.Methods.Count, 20);
-                    for (int i = 0; i < displayCount; i++)
+                    foreach (var classInfo in classesInPackage.Take(30))
                     {
-                        var method = classInfo.Methods[i];
-                        string methodSignature = $"{method.ReturnType} {method.Name}()";
-                        if (method.IsStatic)
-                            methodSignature = "static " + methodSignature;
-                        
-                        EditorGUILayout.LabelField("  • " + methodSignature, EditorStyles.miniLabel);
+                        DrawSingleClass(classInfo);
                     }
                     
-                    if (classInfo.Methods.Count > 20)
+                    if (classesInPackage.Count > 30)
                     {
-                        EditorGUILayout.LabelField($"  ... and {classInfo.Methods.Count - 20} more methods", EditorStyles.miniLabel);
+                        EditorGUILayout.LabelField($"  ... and {classesInPackage.Count - 30} more classes", EditorStyles.miniLabel);
                     }
                     
-                    EditorGUILayout.EndVertical();
+                    EditorGUI.indentLevel--;
                 }
                 
                 EditorGUILayout.EndVertical();
                 EditorGUILayout.Space(2);
             }
-            
-            if (filteredClasses.Count > 100)
+        }
+        
+        void DrawClassesList(List<DexClass> classes)
+        {
+            foreach (var classInfo in classes.Take(100))
             {
-                EditorGUILayout.LabelField($"... and {filteredClasses.Count - 100} more. Use search to narrow down.", EditorStyles.miniLabel);
+                DrawSingleClass(classInfo);
             }
             
-            EditorGUILayout.EndScrollView();
+            if (classes.Count > 100)
+            {
+                EditorGUILayout.LabelField($"... and {classes.Count - 100} more. Use search to narrow down.", EditorStyles.miniLabel);
+            }
+        }
+        
+        void DrawSingleClass(DexClass classInfo)
+        {
+            // Initialize expanded state if needed
+            if (!expandedClasses.ContainsKey(classInfo))
+            {
+                expandedClasses[classInfo] = false;
+            }
+            
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.BeginHorizontal();
+            
+            // Checkbox for selection
+            bool isSelected = selectedClasses.Contains(classInfo);
+            bool newSelected = EditorGUILayout.Toggle(isSelected, GUILayout.Width(20));
+            
+            if (newSelected != isSelected)
+            {
+                if (newSelected)
+                    selectedClasses.Add(classInfo);
+                else
+                    selectedClasses.Remove(classInfo);
+            }
+            
+            // Foldout arrow + class name (show simple name in grouped view, full name otherwise)
+            bool wasExpanded = expandedClasses[classInfo];
+            string displayName = groupByPackage ? classInfo.GetSimpleClassName() : classInfo.ClassName;
+            bool isExpanded = EditorGUILayout.Foldout(wasExpanded, displayName, true);
+            expandedClasses[classInfo] = isExpanded;
+            
+            // Method count
+            EditorGUILayout.LabelField($"{classInfo.Methods.Count} methods", EditorStyles.miniLabel, GUILayout.Width(100));
+            
+            EditorGUILayout.EndHorizontal();
+            
+            // Show full path as subtitle when grouped
+            if (groupByPackage)
+            {
+                EditorGUILayout.LabelField("  " + classInfo.ClassName, EditorStyles.miniLabel);
+            }
+            
+            // Show methods when expanded
+            if (isExpanded && classInfo.Methods.Count > 0)
+            {
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                
+                int displayCount = Math.Min(classInfo.Methods.Count, 20);
+                for (int i = 0; i < displayCount; i++)
+                {
+                    var method = classInfo.Methods[i];
+                    string methodSignature = $"{method.ReturnType} {method.Name}()";
+                    if (method.IsStatic)
+                        methodSignature = "static " + methodSignature;
+                    
+                    EditorGUILayout.LabelField("  • " + methodSignature, EditorStyles.miniLabel);
+                }
+                
+                if (classInfo.Methods.Count > 20)
+                {
+                    EditorGUILayout.LabelField($"  ... and {classInfo.Methods.Count - 20} more methods", EditorStyles.miniLabel);
+                }
+                
+                EditorGUILayout.EndVertical();
+            }
+            
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.Space(2);
         }
         
         void DrawStep3_ReviewWrapper()
@@ -753,6 +856,7 @@ public class {wrapperClassName} {{
             allClasses.Clear();
             selectedClasses.Clear();
             expandedClasses.Clear();
+            expandedPackages.Clear();
             generatedJavaCode = "";
             aarBuilt = false;
             bridgeGenerated = false;
