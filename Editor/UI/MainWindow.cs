@@ -74,6 +74,27 @@ namespace Instemic.AndroidBridge
             
             EditorGUILayout.Space();
             
+            // BIG WIZARD BUTTON
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            
+            var wizardStyle = new GUIStyle(GUI.skin.button)
+            {
+                fontSize = 18,
+                fontStyle = FontStyle.Bold,
+                fixedHeight = 60
+            };
+            
+            if (GUILayout.Button("🧙 Open Workflow Wizard (RECOMMENDED!)", wizardStyle))
+            {
+                WorkflowWizard.Init();
+            }
+            
+            EditorGUILayout.LabelField("One window with step-by-step guidance through the entire process!", EditorStyles.centeredGreyMiniLabel);
+            
+            EditorGUILayout.EndVertical();
+            
+            EditorGUILayout.Space(10);
+            
             EditorGUILayout.HelpBox(
                 "✅ Complete End-to-End Workflow - Fully Self-Contained!\n\n" +
                 "From APK to Unity - NO external tools required:\n\n" +
@@ -87,7 +108,7 @@ namespace Instemic.AndroidBridge
             
             EditorGUILayout.Space();
             
-            GUILayout.Label("✅ Complete Workflow Available", EditorStyles.boldLabel);
+            GUILayout.Label("Or Use Individual Tools:", EditorStyles.boldLabel);
             
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             EditorGUILayout.LabelField("Step 1: Extract from APK", EditorStyles.boldLabel);
