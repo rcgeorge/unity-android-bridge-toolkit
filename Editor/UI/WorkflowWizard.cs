@@ -742,6 +742,12 @@ namespace Instemic.AndroidBridge
                 if (GUILayout.Button("Next ▶", GUILayout.Height(30), GUILayout.Width(100)))
                 {
                     currentStep++;
+                    
+                    // Auto-fill wrapper info when entering Step 3
+                    if (currentStep == 2)
+                    {
+                        AutoFillWrapperInfo();
+                    }
                 }
             }
             
@@ -798,6 +804,82 @@ namespace Instemic.AndroidBridge
                 isProcessing = false;
                 Repaint();
             }
+        }
+        
+        void AutoFillWrapperInfo()
+        {
+            if (selectedClasses.Count == 0)
+                return;
+            
+            // Auto-fill package name from common package prefix
+            var packages = selectedClasses.Select(c => c.GetPackageName()).Distinct().ToList();
+            
+            if (packages.Count == 1)
+            {
+                // All classes from same package - use it with .wrapper suffix
+                packageName = packages[0] + ".wrapper";
+                
+                // Generate wrapper class name from package
+                var packageParts = packages[0].Split('.');
+                wrapperClassName = string.Join("", packageParts.Select(p => 
+                    char.ToUpper(p[0]) + p.Substring(1)
+                )) + "Wrapper";
+            }
+            else
+            {
+                // Multiple packages - find common prefix
+                var commonPrefix = FindCommonPackagePrefix(packages);
+                
+                if (!string.IsNullOrEmpty(commonPrefix))
+                {
+                    packageName = commonPrefix + ".wrapper";
+                    
+                    // Generate class name from prefix
+                    var prefixParts = commonPrefix.Split('.');
+                    wrapperClassName = string.Join("", prefixParts.Select(p => 
+                        char.ToUpper(p[0]) + p.Substring(1)
+                    )) + "Wrapper";
+                }
+                else
+                {
+                    // No common prefix - use first package
+                    packageName = packages[0] + ".wrapper";
+                    wrapperClassName = "SDKWrapper";
+                }
+            }
+            
+            // Special case: if only one class selected, use its name
+            if (selectedClasses.Count == 1)
+            {
+                wrapperClassName = selectedClasses[0].GetSimpleClassName() + "Wrapper";
+            }
+        }
+        
+        string FindCommonPackagePrefix(List<string> packages)
+        {
+            if (packages.Count == 0)
+                return "";
+            
+            if (packages.Count == 1)
+                return packages[0];
+            
+            var parts = packages[0].Split('.');
+            var commonParts = new List<string>();
+            
+            for (int i = 0; i < parts.Length; i++)
+            {
+                bool allMatch = packages.All(p => {
+                    var otherParts = p.Split('.');
+                    return otherParts.Length > i && otherParts[i] == parts[i];
+                });
+                
+                if (allMatch)
+                    commonParts.Add(parts[i]);
+                else
+                    break;
+            }
+            
+            return string.Join(".", commonParts);
         }
         
         void GenerateJavaWrapper()
