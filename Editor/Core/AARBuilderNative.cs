@@ -11,6 +11,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using UnityEditor;
 
 namespace Instemic.AndroidBridge.Core
 {
@@ -144,7 +145,15 @@ namespace Instemic.AndroidBridge.Core
                 throw new Exception("javac not found. Please ensure JDK is installed and JAVA_HOME is set.");
             }
             
-            var args = $"-d \"{outputPath}\" \"{javaFile}\"";
+            // Find Android SDK
+            var androidJar = FindAndroidJar();
+            if (string.IsNullOrEmpty(androidJar))
+            {
+                throw new Exception("Android SDK not found. Please set ANDROID_SDK_ROOT or configure Unity Android SDK path.");
+            }
+            
+            // Build javac command with android.jar in classpath
+            var args = $"-cp \"{androidJar}\" -d \"{outputPath}\" \"{javaFile}\"";
             
             var startInfo = new ProcessStartInfo
             {
@@ -186,6 +195,59 @@ namespace Instemic.AndroidBridge.Core
             }
             
             return output.ToString();
+        }
+        
+        private static string FindAndroidJar()
+        {
+            // Try Unity's Android SDK first
+            var androidSdkRoot = EditorPrefs.GetString("AndroidSdkRoot");
+            
+            // Try ANDROID_SDK_ROOT environment variable
+            if (string.IsNullOrEmpty(androidSdkRoot))
+            {
+                androidSdkRoot = Environment.GetEnvironmentVariable("ANDROID_SDK_ROOT");
+            }
+            
+            // Try ANDROID_HOME environment variable
+            if (string.IsNullOrEmpty(androidSdkRoot))
+            {
+                androidSdkRoot = Environment.GetEnvironmentVariable("ANDROID_HOME");
+            }
+            
+            if (string.IsNullOrEmpty(androidSdkRoot) || !Directory.Exists(androidSdkRoot))
+            {
+                return null;
+            }
+            
+            // Look for android.jar in platforms directory (use latest available)
+            var platformsPath = Path.Combine(androidSdkRoot, "platforms");
+            if (!Directory.Exists(platformsPath))
+            {
+                return null;
+            }
+            
+            // Get all platform directories and sort by version (descending)
+            var platforms = Directory.GetDirectories(platformsPath)
+                .Where(d => Path.GetFileName(d).StartsWith("android-"))
+                .OrderByDescending(d => {
+                    var versionStr = Path.GetFileName(d).Substring(8); // Remove "android-"
+                    int version;
+                    return int.TryParse(versionStr, out version) ? version : 0;
+                })
+                .ToList();
+            
+            // Find first platform with android.jar
+            foreach (var platform in platforms)
+            {
+                var androidJar = Path.Combine(platform, "android.jar");
+                if (File.Exists(androidJar))
+                {
+                    UnityEngine.Debug.Log($"Found Android SDK: {androidJar}");
+                    return androidJar;
+                }
+            }
+            
+            return null;
         }
         
         private static string CreateAAR(string buildPath, string classesPath, string packageName, string projectName)
