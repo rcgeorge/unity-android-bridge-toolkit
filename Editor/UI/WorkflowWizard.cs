@@ -210,9 +210,9 @@ namespace Instemic.AndroidBridge
             EditorGUILayout.HelpBox(
                 "Select the classes you want to use in Unity.\n\n" +
                 "Tips:\n" +
-                "• Search by METHOD NAME to find specific functionality (getPose, 6DOF, listener)\n" +
-                "• Use 'Select Package' to select all classes in a namespace\n" +
-                "• Click class names to expand and see methods",
+                "• [interface] tags show interfaces - usually skip these, use the implementation\n" +
+                "• [class] tags show concrete classes - these are what you typically want\n" +
+                "• Search by METHOD NAME to find specific functionality (getPose, 6DOF, listener)",
                 MessageType.Info
             );
             
@@ -419,6 +419,16 @@ namespace Instemic.AndroidBridge
             bool isExpanded = EditorGUILayout.Foldout(wasExpanded, displayName, true);
             expandedClasses[classInfo] = isExpanded;
             
+            // Class type badge
+            string classTypeLabel = classInfo.GetClassTypeLabel();
+            Color badgeColor = GetClassTypeBadgeColor(classInfo);
+            var badgeStyle = new GUIStyle(EditorStyles.miniLabel)
+            {
+                normal = { textColor = badgeColor },
+                fontStyle = FontStyle.Bold
+            };
+            EditorGUILayout.LabelField($"[{classTypeLabel}]", badgeStyle, GUILayout.Width(70));
+            
             // Method count (show matching count if searching by method)
             if (matchingMethodCount > 0)
             {
@@ -482,6 +492,14 @@ namespace Instemic.AndroidBridge
             
             EditorGUILayout.EndVertical();
             EditorGUILayout.Space(2);
+        }
+        
+        Color GetClassTypeBadgeColor(DexClass classInfo)
+        {
+            if (classInfo.IsInterface) return new Color(0.4f, 0.7f, 1.0f); // Light blue
+            if (classInfo.IsAbstract) return new Color(1.0f, 0.8f, 0.4f); // Orange
+            if (classInfo.IsEnum) return new Color(0.8f, 0.5f, 1.0f); // Purple
+            return new Color(0.6f, 0.9f, 0.6f); // Green (concrete class)
         }
         
         void DrawStep3_ReviewWrapper()
