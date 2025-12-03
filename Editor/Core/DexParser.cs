@@ -134,10 +134,15 @@ namespace Instemic.AndroidBridge.Core
                 // Convert from descriptor format (Lcom/example/Class;) to Java format
                 className = ConvertDescriptorToClassName(className);
                 
+                // Parse access flags
+                // Reference: https://source.android.com/docs/core/runtime/dex-format#access-flags
                 DexClass dexClass = new DexClass
                 {
                     ClassName = className,
-                    IsPublic = (accessFlags & 0x0001) != 0
+                    IsPublic = (accessFlags & 0x0001) != 0,
+                    IsInterface = (accessFlags & 0x0200) != 0,
+                    IsAbstract = (accessFlags & 0x0400) != 0,
+                    IsEnum = (accessFlags & 0x4000) != 0
                 };
                 
                 // Parse class data if present
@@ -349,6 +354,9 @@ namespace Instemic.AndroidBridge.Core
     {
         public string ClassName;
         public bool IsPublic;
+        public bool IsInterface;
+        public bool IsAbstract;
+        public bool IsEnum;
         public List<DexMethod> Methods = new List<DexMethod>();
         
         public string GetPackageName()
@@ -361,6 +369,14 @@ namespace Instemic.AndroidBridge.Core
         {
             int lastDot = ClassName.LastIndexOf('.');
             return lastDot > 0 ? ClassName.Substring(lastDot + 1) : ClassName;
+        }
+        
+        public string GetClassTypeLabel()
+        {
+            if (IsInterface) return "interface";
+            if (IsEnum) return "enum";
+            if (IsAbstract) return "abstract";
+            return "class";
         }
     }
     
